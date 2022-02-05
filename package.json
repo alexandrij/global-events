@@ -1,0 +1,22 @@
+{
+  "name": "global-events",
+  "version": "1.0.0",
+  "description": "Global events for react app",
+  "author": "adimitriev",
+  "license": "ISC",
+  "main": "dist",
+  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": "> 14.0.0",
+    "npm": "> 6.0.0"
+  },
+  "scripts": {
+    "build": "npm run clean && npm run compile",
+    "compile": "tsc",
+    "clean": "rm -rf ./dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "typescript": "^4.5.5"
+  }
+}
