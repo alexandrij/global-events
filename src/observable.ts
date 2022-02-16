@@ -2,6 +2,12 @@ export type EventKey = string;
 
 export type EventData = any;
 
+export interface Event {
+  key: EventKey;
+  data: EventData;
+}
+
+export type AllSubscriber = (event: Event) => void;
 export type Subscriber = (data: EventData) => void;
 export type Unsubscriber = () => void;
 
@@ -9,17 +15,21 @@ export type DispatchEvent = (event: string, data: EventData) => void;
 
 export const ALL_EVENTS_KEY = '*';
 
-export class Observable {
-  protected subscribers = new Map<string, Subscriber[]>();
+export class Observable<S = Subscriber> {
+  protected subscribers = new Map<string, S[]>();
 
-  subscribe(eventKey: EventKey, subscriber: Subscriber): Unsubscriber {
+  getSubscribers(): Map<EventKey, S[]> {
+    return this.subscribers;
+  }
+
+  subscribe(eventKey: EventKey, subscriber: S): Unsubscriber {
     let isSubscribed = true;
-    let subscribers: Subscriber[];
+    let subscribers: S[];
     if (!this.subscribers.has(eventKey)) {
       subscribers = [subscriber];
       this.subscribers.set(eventKey, subscribers);
     } else {
-      subscribers = this.subscribers.get(eventKey) as Subscriber[];
+      subscribers = this.subscribers.get(eventKey) as S[];
     }
 
     return function unsubscribe(): void {
@@ -32,14 +42,10 @@ export class Observable {
     };
   }
 
-  unsubscribe(eventKey: EventKey, subscriber: Subscriber): void {
+  unsubscribe(eventKey: EventKey, subscriber: S): void {
     const subscribers = this.subscribers.get(eventKey) || [];
     const index = subscribers.indexOf(subscriber);
     index > -1 && subscribers.splice(index, 1);
-  }
-
-  allSubscribe(subscriber: Subscriber): Unsubscriber {
-    return this.subscribe(ALL_EVENTS_KEY, subscriber);
   }
 
   clear(eventKey?: EventKey): void {
@@ -60,12 +66,14 @@ export class Subject extends Observable {
 
     const allSubscribers = this.subscribers.get(ALL_EVENTS_KEY) || [];
     allSubscribers.forEach((subscriber) => {
-      subscriber(data);
+      subscriber({
+        key: event,
+        data: data,
+      });
     });
   }
 
-  getSubscribers(): Map<EventKey, EventData> {
-    console.warn('for debugging...');
-    return this.subscribers;
+  allSubscribe(subscriber: AllSubscriber): Unsubscriber {
+    return this.subscribe(ALL_EVENTS_KEY, subscriber);
   }
 }
